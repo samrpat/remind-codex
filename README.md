@@ -4,7 +4,7 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
 
 ## Included in this scaffold
 
-- Quick Add as the default screen for non-settings categories.
+- Quick Add as the default screen for non-settings categories, with one-tap due-date/time chips.
 - Gesture navigation:
   - Swipe left/right: cycle Home, Arcade, Settings, and custom categories.
   - Swipe down: Today view.
@@ -13,7 +13,7 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
   - Smart parsing, smart repeat, haptics, badge count, iCloud toggle.
   - Default priority/list/repeat and trigger feature toggles.
 - Natural language parsing for:
-  - Time (`tomorrow at 8pm`, `in 2 hours` via `NSDataDetector` support)
+  - Time (`tomorrow at 8pm`, `in 2 hours`, `due 3pm tmrw`)
   - Location hints (`home`, `school`)
   - WiFi trigger phrases
   - App mode trigger phrases

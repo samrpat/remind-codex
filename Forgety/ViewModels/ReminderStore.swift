@@ -2,6 +2,26 @@ import Foundation
 import SwiftUI
 import Combine
 
+enum QuickDuePreset: String, CaseIterable, Identifiable {
+    case none
+    case inOneHour
+    case tonight
+    case tomorrowMorning
+    case tomorrowThreePM
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .none: return "No Due"
+        case .inOneHour: return "+1h"
+        case .tonight: return "Tonight"
+        case .tomorrowMorning: return "Tomorrow 9a"
+        case .tomorrowThreePM: return "Tomorrow 3p"
+        }
+    }
+}
+
 @MainActor
 final class ReminderStore: ObservableObject {
     @Published var categories: [ReminderCategory] = []
@@ -12,6 +32,7 @@ final class ReminderStore: ObservableObject {
     @Published var showArchiveSheet = false
     @Published var settings = AppSettings()
     @Published var selectedReminder: ReminderItem?
+    @Published var selectedQuickPreset: QuickDuePreset = .none
 
     let parser = NaturalLanguageParser()
     let triggerEngine = ContextTriggerEngine()
@@ -25,6 +46,10 @@ final class ReminderStore: ObservableObject {
 
     var isSettingsPageActive: Bool {
         activeCategory?.name == "Settings"
+    }
+
+    var quickPresetDueDate: Date? {
+        dueDate(for: selectedQuickPreset)
     }
 
     var todaysReminders: [ReminderItem] {
@@ -69,12 +94,16 @@ final class ReminderStore: ObservableObject {
         let category = categoryForHint(parsed.categoryHint) ?? activeCategory ?? fallbackCategory
 
         guard let category else { return }
+        let parserDate = triggerDate(from: parsed.trigger)
+        let dueDate = quickPresetDueDate ?? parserDate
+        let trigger: ReminderTrigger = dueDate.map { .time($0) } ?? parsed.trigger
+
         var reminder = ReminderItem(
             title: parsed.cleanedTitle,
             categoryID: category.id,
             listName: settings.defaultListName,
-            dueDate: triggerDate(from: parsed.trigger),
-            trigger: parsed.trigger,
+            dueDate: dueDate,
+            trigger: trigger,
             priority: settings.defaultPriority,
             repeatRule: ReminderRepeatRule(frequency: settings.defaultRepeat, interval: 1)
         )
@@ -83,6 +112,11 @@ final class ReminderStore: ObservableObject {
         reminders.insert(reminder, at: 0)
         triggerEngine.scheduleNotification(for: reminder)
         quickInput = ""
+        selectedQuickPreset = .none
+    }
+
+    func toggleQuickPreset(_ preset: QuickDuePreset) {
+        selectedQuickPreset = selectedQuickPreset == preset ? .none : preset
     }
 
     func toggleCompleted(_ id: UUID) {
@@ -114,5 +148,31 @@ final class ReminderStore: ObservableObject {
     private func triggerDate(from trigger: ReminderTrigger) -> Date? {
         if case .time(let date) = trigger { return date }
         return nil
+    }
+
+    private func dueDate(for preset: QuickDuePreset) -> Date? {
+        var comps = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+        switch preset {
+        case .none:
+            return nil
+        case .inOneHour:
+            return Calendar.current.date(byAdding: .hour, value: 1, to: .now)
+        case .tonight:
+            comps.hour = 20
+            comps.minute = 0
+            return Calendar.current.date(from: comps)
+        case .tomorrowMorning:
+            guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: .now) else { return nil }
+            var tomorrowComps = Calendar.current.dateComponents([.year, .month, .day], from: tomorrow)
+            tomorrowComps.hour = 9
+            tomorrowComps.minute = 0
+            return Calendar.current.date(from: tomorrowComps)
+        case .tomorrowThreePM:
+            guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: .now) else { return nil }
+            var tomorrowComps = Calendar.current.dateComponents([.year, .month, .day], from: tomorrow)
+            tomorrowComps.hour = 15
+            tomorrowComps.minute = 0
+            return Calendar.current.date(from: tomorrowComps)
+        }
     }
 }

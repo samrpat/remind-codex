@@ -137,7 +137,7 @@ struct ReminderListDetailView: View {
                         } label: {
                             Text(reminder.title)
                                 .font(.body.weight(.semibold))
-                                .foregroundStyle(reminder.url == nil ? .primary : .blue)
+                                .foregroundColor(reminder.url == nil ? .primary : .blue)
                         }
                         .buttonStyle(.plain)
 

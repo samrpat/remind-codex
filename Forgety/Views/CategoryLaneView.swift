@@ -32,7 +32,7 @@ struct CategoryLaneView: View {
                                     } label: {
                                         Text(item.title)
                                             .lineLimit(1)
-                                            .foregroundStyle(item.url == nil ? .primary : .blue)
+                                            .foregroundColor(item.url == nil ? .primary : .blue)
                                     }
                                     .buttonStyle(.plain)
                                     Spacer()

@@ -59,7 +59,7 @@ struct QuickAddView: View {
             }
             .buttonStyle(.bordered)
 
-            Text(store.dayOffsetLabel)
+            Text(store.quickDaySummary)
                 .font(.caption.weight(.semibold))
                 .frame(minWidth: 80)
 

@@ -7,20 +7,16 @@ enum QuickTimePreset: String, CaseIterable, Identifiable {
     case threePM
 
     var id: String { rawValue }
+    var label: String { self == .nineAM ? "9a" : "3p" }
+    var hour: Int { self == .nineAM ? 9 : 15 }
+}
 
-    var label: String {
-        switch self {
-        case .nineAM: return "9a"
-        case .threePM: return "3p"
-        }
-    }
+enum ListSortMode: String, CaseIterable, Identifiable {
+    case manual
+    case dueDate
 
-    var hour: Int {
-        switch self {
-        case .nineAM: return 9
-        case .threePM: return 15
-        }
-    }
+    var id: String { rawValue }
+    var label: String { self == .manual ? "Manual" : "Due Date" }
 }
 
 @MainActor
@@ -37,10 +33,12 @@ final class ReminderStore: ObservableObject {
     @Published var quickDayOffset: Int = 0
     @Published var selectedQuickTimePreset: QuickTimePreset?
 
+    @Published var newSectionName: String = ""
+    @Published var selectedSectionByCategory: [UUID: String] = [:]
+    @Published var listSortMode: ListSortMode = .dueDate
+
     let parser = NaturalLanguageParser()
     let triggerEngine = ContextTriggerEngine()
-
-    var activeCategories: [ReminderCategory] { categories }
 
     var activeCategory: ReminderCategory? {
         guard activeCategoryIndex >= 0, activeCategoryIndex < categories.count else { return nil }
@@ -60,13 +58,13 @@ final class ReminderStore: ObservableObject {
         return Calendar.current.date(from: comps)
     }
 
-    var dayOffsetLabel: String {
+    var quickDaySummary: String {
+        let baseDate = Calendar.current.date(byAdding: .day, value: quickDayOffset, to: .now) ?? .now
+        let weekday = baseDate.formatted(.dateTime.weekday(.abbreviated))
         switch quickDayOffset {
-        case 0: return "Today"
-        case 1: return "Tomorrow"
-        case -1: return "Yesterday"
-        default:
-            return quickDayOffset > 0 ? "+\(quickDayOffset)d" : "\(quickDayOffset)d"
+        case 0: return "Today • \(weekday)"
+        case 1: return "Tomorrow • \(weekday)"
+        default: return "\(quickDayOffset >= 0 ? "+\(quickDayOffset)" : "\(quickDayOffset)")d • \(weekday)"
         }
     }
 
@@ -93,6 +91,7 @@ final class ReminderStore: ObservableObject {
                 ReminderCategory(name: "Arcade", icon: "gamecontroller.fill", tintHex: "#A855F7", isSystem: true),
                 ReminderCategory(name: "Settings", icon: "gearshape.fill", tintHex: "#64748B", isSystem: true)
             ]
+            categories.forEach { selectedSectionByCategory[$0.id] = "General" }
         }
         await triggerEngine.requestPermissions()
     }
@@ -116,10 +115,12 @@ final class ReminderStore: ObservableObject {
         let dueDate = quickPresetDueDate ?? parserDate
         let trigger: ReminderTrigger = dueDate.map { .time($0) } ?? parsed.trigger
 
+        let chosenSection = selectedSectionByCategory[category.id] ?? "General"
         var reminder = ReminderItem(
             title: parsed.cleanedTitle,
             categoryID: category.id,
             listName: settings.defaultListName,
+            sectionName: chosenSection,
             dueDate: dueDate,
             trigger: trigger,
             priority: settings.defaultPriority,
@@ -142,6 +143,41 @@ final class ReminderStore: ObservableObject {
         quickDayOffset = max(-30, min(30, quickDayOffset + delta))
     }
 
+    func addSectionToActiveCategory() {
+        guard let category = activeCategory else { return }
+        let section = newSectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !section.isEmpty else { return }
+        selectedSectionByCategory[category.id] = section
+        newSectionName = ""
+    }
+
+    func sections(for category: ReminderCategory) -> [String] {
+        let existing = reminders
+            .filter { $0.categoryID == category.id }
+            .map(\.sectionName)
+        let merged = Set(existing + [selectedSectionByCategory[category.id] ?? "General", "General"])
+        return Array(merged).sorted()
+    }
+
+    func reminders(for category: ReminderCategory, section: String? = nil) -> [ReminderItem] {
+        let filtered = reminders.filter {
+            $0.categoryID == category.id && $0.status == .active && (section == nil || $0.sectionName == section)
+        }
+        switch listSortMode {
+        case .manual:
+            return filtered
+        case .dueDate:
+            return filtered.sorted { lhs, rhs in
+                switch (lhs.dueDate, rhs.dueDate) {
+                case let (l?, r?): return l < r
+                case (_?, nil): return true
+                case (nil, _?): return false
+                case (nil, nil): return lhs.createdAt > rhs.createdAt
+                }
+            }
+        }
+    }
+
     func toggleCompleted(_ id: UUID) {
         guard let idx = reminders.firstIndex(where: { $0.id == id }) else { return }
         reminders[idx].status = reminders[idx].status == .completed ? .active : .completed
@@ -153,14 +189,6 @@ final class ReminderStore: ObservableObject {
     func updateReminder(_ reminder: ReminderItem) {
         guard let idx = reminders.firstIndex(where: { $0.id == reminder.id }) else { return }
         reminders[idx] = reminder
-    }
-
-    func addCategory(name: String, icon: String = "folder.fill", tintHex: String = "#22C55E") {
-        categories.append(ReminderCategory(name: name, icon: icon, tintHex: tintHex))
-    }
-
-    func reminders(for category: ReminderCategory) -> [ReminderItem] {
-        reminders.filter { $0.categoryID == category.id && $0.status == .active }
     }
 
     private func categoryForHint(_ hint: String?) -> ReminderCategory? {

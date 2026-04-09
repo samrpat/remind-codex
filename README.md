@@ -9,17 +9,22 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
   - Swipe left/right: cycle Home, Arcade, Settings, and custom categories.
   - Swipe down: Today view.
   - Swipe up: Search + Archive.
-- **Actual Settings page** (not a task list) with adjustable app options:
-  - Smart parsing, smart repeat, haptics, badge count, iCloud toggle.
-  - Default priority/list/repeat and trigger feature toggles.
+- **Simplified Settings page** with clearly-labeled defaults and trigger configuration:
+  - Smart parsing, smart repeat, haptics.
+  - Default priority/repeat/list values.
+  - Location trigger radius, WiFi SSIDs, and focus-mode trigger name.
 - Natural language parsing for:
   - Time (`tomorrow at 8pm`, `in 2 hours`, `due 3pm tmrw`)
   - Location hints (`home`, `school`)
   - WiFi trigger phrases
   - App mode trigger phrases
+- Expanded list lane with sections + sort mode:
+  - Create custom sections and file reminders into sections.
+  - Sort active reminders by due date or manual order.
+  - Due time is shown inline on the home list without opening options.
 - Expanded reminder options inspired by iOS Reminders:
   - Notes, URL, due/start date, all-day, priority, flagged.
-  - Repeat rules, alerts, tags, list name, assignee, nested subtasks.
+  - Repeat rules, alerts, tags, list name/section, assignee, nested subtasks.
 - Notification scheduling service with repeat nudges for incomplete items.
 - Simple completion analytics strip (today/week).
 - Liquid-glass visual style using material backgrounds + soft depth.

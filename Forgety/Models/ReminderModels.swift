@@ -95,6 +95,7 @@ struct ReminderItem: Identifiable, Codable, Hashable {
     var url: URL?
     var categoryID: UUID
     var listName: String
+    var sectionName: String
     var createdAt: Date
     var dueDate: Date?
     var startDate: Date?
@@ -117,6 +118,7 @@ struct ReminderItem: Identifiable, Codable, Hashable {
         url: URL? = nil,
         categoryID: UUID,
         listName: String = "Reminders",
+        sectionName: String = "General",
         createdAt: Date = .now,
         dueDate: Date? = nil,
         startDate: Date? = nil,
@@ -138,6 +140,7 @@ struct ReminderItem: Identifiable, Codable, Hashable {
         self.url = url
         self.categoryID = categoryID
         self.listName = listName
+        self.sectionName = sectionName
         self.createdAt = createdAt
         self.dueDate = dueDate
         self.startDate = startDate
@@ -179,7 +182,6 @@ struct CompletionAnalytics: Codable {
 
 struct AppSettings: Codable, Hashable {
     var smartParsingEnabled: Bool = true
-    var voiceQuickAddEnabled: Bool = true
     var hapticsEnabled: Bool = true
     var smartRepeatEnabled: Bool = true
     var showBadgeCount: Bool = true
@@ -190,4 +192,8 @@ struct AppSettings: Codable, Hashable {
     var locationTriggersEnabled: Bool = true
     var wifiTriggersEnabled: Bool = true
     var appModeTriggersEnabled: Bool = true
+    var homeSSID: String = ""
+    var workSSID: String = ""
+    var preferredFocusMode: String = ""
+    var locationTriggerRadiusMeters: Double = 150
 }

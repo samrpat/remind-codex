@@ -37,6 +37,7 @@ struct ReminderDetailSheetView: View {
                     }
                     Toggle("Flagged", isOn: $reminder.flagged)
                     TextField("List", text: $reminder.listName)
+                    TextField("Section", text: $reminder.sectionName)
                     TextField("Assigned to", text: Binding($reminder.assignedTo, replacingNilWith: ""))
                     TextField("Tags (comma separated)", text: $tagsText)
                         .onAppear { tagsText = reminder.tags.joined(separator: ", ") }

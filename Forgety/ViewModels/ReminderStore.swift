@@ -19,6 +19,14 @@ enum ListSortMode: String, CaseIterable, Identifiable {
     var label: String { self == .manual ? "Manual" : "Due Date" }
 }
 
+enum DashboardScope: String, CaseIterable, Identifiable {
+    case today
+    case week
+
+    var id: String { rawValue }
+    var title: String { self == .today ? "Today" : "Week" }
+}
+
 @MainActor
 final class ReminderStore: ObservableObject {
     @Published var categories: [ReminderCategory] = []
@@ -26,7 +34,6 @@ final class ReminderStore: ObservableObject {
     @Published var quickInput: String = ""
     @Published var activeCategoryIndex = 0
     @Published var showTodaySheet = false
-    @Published var showArchiveSheet = false
     @Published var settings = AppSettings()
     @Published var selectedReminder: ReminderItem?
 
@@ -36,6 +43,11 @@ final class ReminderStore: ObservableObject {
     @Published var newSectionName: String = ""
     @Published var selectedSectionByCategory: [UUID: String] = [:]
     @Published var listSortMode: ListSortMode = .dueDate
+
+    @Published var searchQuery: String = ""
+    @Published var showListDetailSheet = false
+    @Published var showDashboardSheet = false
+    @Published var dashboardScope: DashboardScope = .today
 
     let parser = NaturalLanguageParser()
     let triggerEngine = ContextTriggerEngine()
@@ -80,8 +92,26 @@ final class ReminderStore: ObservableObject {
         }
     }
 
-    var archivedReminders: [ReminderItem] {
-        reminders.filter { $0.status != .active }
+    var overdueReminders: [ReminderItem] {
+        reminders.filter { reminder in
+            guard reminder.status == .active, let dueDate = reminder.dueDate else { return false }
+            return dueDate < .now && !Calendar.current.isDateInToday(dueDate)
+        }
+    }
+
+    var weekReminders: [ReminderItem] {
+        reminders.filter { reminder in
+            guard reminder.status == .active, let dueDate = reminder.dueDate else { return false }
+            return Calendar.current.isDate(dueDate, equalTo: .now, toGranularity: .weekOfYear)
+        }
+    }
+
+    var completionToday: Int {
+        reminders.filter { $0.status == .completed && Calendar.current.isDateInToday($0.createdAt) }.count
+    }
+
+    var completionWeek: Int {
+        reminders.filter { $0.status == .completed && Calendar.current.isDate($0.createdAt, equalTo: .now, toGranularity: .weekOfYear) }.count
     }
 
     func bootstrap() async {
@@ -152,9 +182,7 @@ final class ReminderStore: ObservableObject {
     }
 
     func sections(for category: ReminderCategory) -> [String] {
-        let existing = reminders
-            .filter { $0.categoryID == category.id }
-            .map(\.sectionName)
+        let existing = reminders.filter { $0.categoryID == category.id }.map(\.sectionName)
         let merged = Set(existing + [selectedSectionByCategory[category.id] ?? "General", "General"])
         return Array(merged).sorted()
     }
@@ -175,6 +203,31 @@ final class ReminderStore: ObservableObject {
                 case (nil, nil): return lhs.createdAt > rhs.createdAt
                 }
             }
+        }
+    }
+
+    func filteredRemindersForActiveCategory() -> [ReminderItem] {
+        guard let category = activeCategory else { return [] }
+        let source = reminders(for: category)
+        guard !searchQuery.isEmpty else { return source }
+        return source.filter {
+            $0.title.localizedCaseInsensitiveContains(searchQuery) ||
+            ($0.notes?.localizedCaseInsensitiveContains(searchQuery) ?? false)
+        }
+    }
+
+    func remindersForNext(days: Int) -> [(date: Date, items: [ReminderItem])] {
+        guard days > 0 else { return [] }
+        let upcoming = reminders.filter { $0.status == .active && $0.dueDate != nil }
+        let grouped = Dictionary(grouping: upcoming) { reminder in
+            Calendar.current.startOfDay(for: reminder.dueDate ?? .now)
+        }
+
+        return (0..<days).compactMap { offset in
+            guard let date = Calendar.current.date(byAdding: .day, value: offset, to: .now) else { return nil }
+            let start = Calendar.current.startOfDay(for: date)
+            let items = (grouped[start] ?? []).sorted { ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture) }
+            return (start, items)
         }
     }
 

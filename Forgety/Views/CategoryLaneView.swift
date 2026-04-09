@@ -5,87 +5,41 @@ struct CategoryLaneView: View {
 
     var body: some View {
         if let category = store.activeCategory {
+            let sectionCount = store.sections(for: category).count
+            let reminderCount = store.reminders(for: category).count
+            let dueSoon = store.reminders(for: category).filter { ($0.dueDate ?? .distantFuture) < Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .distantFuture }.count
+
             GlassCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Label(category.name, systemImage: category.icon)
-                            .font(.headline)
-                        Spacer()
-                        Picker("Sort", selection: $store.listSortMode) {
-                            ForEach(ListSortMode.allCases) { mode in
-                                Text(mode.label).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 180)
+                    Label(category.name, systemImage: category.icon)
+                        .font(.headline)
+
+                    HStack(spacing: 18) {
+                        metric("Reminders", value: "\(reminderCount)")
+                        metric("Sections", value: "\(sectionCount)")
+                        metric("Due Soon", value: "\(dueSoon)")
                     }
 
-                    HStack {
-                        TextField("Add section", text: $store.newSectionName)
-                            .textFieldStyle(.roundedBorder)
-                        Button("Add") {
-                            store.addSectionToActiveCategory()
-                        }
-                        .buttonStyle(.borderedProminent)
+                    Button {
+                        store.showListDetailSheet = true
+                    } label: {
+                        Label("Open List", systemImage: "list.bullet")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
                     }
-
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 14) {
-                            ForEach(store.sections(for: category), id: \.self) { section in
-                                sectionBlock(category: category, section: section)
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 360)
+                    .buttonStyle(.borderedProminent)
                 }
             }
         }
     }
 
-    @ViewBuilder
-    private func sectionBlock(category: ReminderCategory, section: String) -> some View {
-        let items = store.reminders(for: category, section: section)
-        VStack(alignment: .leading, spacing: 8) {
-            Text(section)
-                .font(.subheadline.weight(.semibold))
+    private func metric(_ title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
-
-            if items.isEmpty {
-                Text("No reminders in this section")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(items) { reminder in
-                    HStack(alignment: .top, spacing: 8) {
-                        Button {
-                            store.toggleCompleted(reminder.id)
-                        } label: {
-                            Image(systemName: reminder.status == .completed ? "checkmark.circle.fill" : "circle")
-                        }
-                        .buttonStyle(.plain)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(reminder.title)
-                                .lineLimit(1)
-                            Text(dueLabel(for: reminder))
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer()
-
-                        Button("Options") {
-                            store.selectedReminder = reminder
-                        }
-                        .font(.caption)
-                    }
-                }
-            }
+            Text(value)
+                .font(.headline)
         }
-    }
-
-    private func dueLabel(for reminder: ReminderItem) -> String {
-        guard let due = reminder.dueDate else { return "No due date" }
-        return "Due: \(due.formatted(date: .abbreviated, time: .shortened))"
     }
 }

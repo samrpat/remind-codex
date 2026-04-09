@@ -8,8 +8,18 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
 - Gesture navigation:
   - Swipe left/right: cycle Home, Arcade, Settings, and custom categories.
   - Swipe down: Today view.
-  - Swipe up: Search + Archive.
-- **Simplified Settings page** with clearly-labeled defaults and trigger configuration:
+- Top search bar on the homepage for quick filtering (instead of a separate search screen).
+- List card on homepage opens into a dedicated **list detail view** (iOS Reminders style) with:
+  - sectioned list layout,
+  - section creation,
+  - sort by due date/manual,
+  - inline due dates and options actions.
+- Tapable Today/Week dashboard cards that open overview with:
+  - overdue vs due today counts,
+  - completion stats,
+  - today task list,
+  - collapsible next-days timeline (next 5 days).
+- Simplified Settings page with clearly-labeled defaults and trigger configuration:
   - Smart parsing, smart repeat, haptics.
   - Default priority/repeat/list values.
   - Location trigger radius, WiFi SSIDs, and focus-mode trigger name.
@@ -18,16 +28,9 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
   - Location hints (`home`, `school`)
   - WiFi trigger phrases
   - App mode trigger phrases
-- Expanded list lane with sections + sort mode:
-  - Create custom sections and file reminders into sections.
-  - Sort active reminders by due date or manual order.
-  - Due time is shown inline on the home list without opening options.
 - Expanded reminder options inspired by iOS Reminders:
   - Notes, URL, due/start date, all-day, priority, flagged.
   - Repeat rules, alerts, tags, list name/section, assignee, nested subtasks.
-- Notification scheduling service with repeat nudges for incomplete items.
-- Simple completion analytics strip (today/week).
-- Liquid-glass visual style using material backgrounds + soft depth.
 
 ## Project structure
 
@@ -37,13 +40,5 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
 - `Models/` reminder, trigger, repeat, alert, and settings data models
 - `Services/` NLP parser + trigger engine
 - `ViewModels/` observable app state and orchestration
-- `Views/` swipe container + quick add + today/archive + settings + reminder options sheet
+- `Views/` swipe container + quick add + today + list detail + dashboard + settings + reminder options sheet
 - `Components/` reusable glass card UI
-
-## Next production steps
-
-1. Add persistent storage (SwiftData/Core Data/CloudKit).
-2. Implement real geofencing + SSID detection + app-mode hooks.
-3. Connect speech dictation via `SFSpeechRecognizer`.
-4. Add notification/action handling for complete/snooze directly from alerts.
-5. Add parser unit tests + UI snapshot tests.

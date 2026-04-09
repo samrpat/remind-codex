@@ -9,7 +9,7 @@ struct RootSwipeContainerView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
-                Spacer(minLength: 24)
+                searchBar
                 if !store.isSettingsPageActive {
                     QuickAddView()
                 }
@@ -18,7 +18,7 @@ struct RootSwipeContainerView: View {
                 } else {
                     CategoryLaneView()
                 }
-                statsBar
+                dashboardBar
                 Spacer()
             }
             .padding()
@@ -28,13 +28,26 @@ struct RootSwipeContainerView: View {
         .sheet(isPresented: $store.showTodaySheet) {
             TodayView()
         }
-        .sheet(isPresented: $store.showArchiveSheet) {
-            ArchiveSearchView()
+        .sheet(isPresented: $store.showListDetailSheet) {
+            ReminderListDetailView()
+        }
+        .sheet(isPresented: $store.showDashboardSheet) {
+            DashboardOverviewView()
         }
         .sheet(item: $store.selectedReminder) { reminder in
             ReminderDetailSheetView(reminder: reminder)
         }
         .animation(.spring(response: 0.32, dampingFraction: 0.85), value: store.activeCategoryIndex)
+    }
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+            TextField("Search reminders", text: $store.searchQuery)
+                .textInputAutocapitalization(.never)
+        }
+        .padding(10)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private var dragGesture: some Gesture {
@@ -45,35 +58,43 @@ struct RootSwipeContainerView: View {
                 if abs(horizontal) > abs(vertical) {
                     if horizontal < -40 { store.cycleCategory(direction: 1) }
                     if horizontal > 40 { store.cycleCategory(direction: -1) }
-                } else {
-                    if vertical > 70 { store.showTodaySheet = true }
-                    if vertical < -70 { store.showArchiveSheet = true }
+                } else if vertical > 70 {
+                    store.showTodaySheet = true
                 }
             }
     }
 
-    private var statsBar: some View {
-        let completedToday = store.reminders.filter { $0.status == .completed && Calendar.current.isDateInToday($0.createdAt) }.count
-        let completedWeek = store.reminders.filter { $0.status == .completed && Calendar.current.isDate($0.createdAt, equalTo: .now, toGranularity: .weekOfYear) }.count
-
-        return GlassCard {
+    private var dashboardBar: some View {
+        GlassCard {
             HStack {
-                VStack(alignment: .leading) {
-                    Text("Today")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text("\(completedToday) done")
-                        .font(.headline)
+                Button {
+                    store.dashboardScope = .today
+                    store.showDashboardSheet = true
+                } label: {
+                    metric(title: "Today", value: store.completionToday)
                 }
+                .buttonStyle(.plain)
+
                 Spacer()
-                VStack(alignment: .trailing) {
-                    Text("Week")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text("\(completedWeek) done")
-                        .font(.headline)
+
+                Button {
+                    store.dashboardScope = .week
+                    store.showDashboardSheet = true
+                } label: {
+                    metric(title: "Week", value: store.completionWeek)
                 }
+                .buttonStyle(.plain)
             }
+        }
+    }
+
+    private func metric(title: String, value: Int) -> some View {
+        VStack(alignment: .leading) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text("\(value) done")
+                .font(.headline)
         }
     }
 }

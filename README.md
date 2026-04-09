@@ -4,7 +4,7 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
 
 ## Included in this scaffold
 
-- Quick Add as the default screen for non-settings categories, with one-tap due-date/time chips.
+- Quick Add as the default screen for non-settings categories, with one-tap time chips (`9a`, `3p`) and day shift controls (`-` / `+`).
 - Gesture navigation:
   - Swipe left/right: cycle Home, Arcade, Settings, and custom categories.
   - Swipe down: Today view.

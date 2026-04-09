@@ -2,22 +2,23 @@ import Foundation
 import SwiftUI
 import Combine
 
-enum QuickDuePreset: String, CaseIterable, Identifiable {
-    case none
-    case inOneHour
-    case tonight
-    case tomorrowMorning
-    case tomorrowThreePM
+enum QuickTimePreset: String, CaseIterable, Identifiable {
+    case nineAM
+    case threePM
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .none: return "No Due"
-        case .inOneHour: return "+1h"
-        case .tonight: return "Tonight"
-        case .tomorrowMorning: return "Tomorrow 9a"
-        case .tomorrowThreePM: return "Tomorrow 3p"
+        case .nineAM: return "9a"
+        case .threePM: return "3p"
+        }
+    }
+
+    var hour: Int {
+        switch self {
+        case .nineAM: return 9
+        case .threePM: return 15
         }
     }
 }
@@ -32,7 +33,9 @@ final class ReminderStore: ObservableObject {
     @Published var showArchiveSheet = false
     @Published var settings = AppSettings()
     @Published var selectedReminder: ReminderItem?
-    @Published var selectedQuickPreset: QuickDuePreset = .none
+
+    @Published var quickDayOffset: Int = 0
+    @Published var selectedQuickTimePreset: QuickTimePreset?
 
     let parser = NaturalLanguageParser()
     let triggerEngine = ContextTriggerEngine()
@@ -49,7 +52,22 @@ final class ReminderStore: ObservableObject {
     }
 
     var quickPresetDueDate: Date? {
-        dueDate(for: selectedQuickPreset)
+        guard let selectedQuickTimePreset else { return nil }
+        let baseDate = Calendar.current.date(byAdding: .day, value: quickDayOffset, to: .now) ?? .now
+        var comps = Calendar.current.dateComponents([.year, .month, .day], from: baseDate)
+        comps.hour = selectedQuickTimePreset.hour
+        comps.minute = 0
+        return Calendar.current.date(from: comps)
+    }
+
+    var dayOffsetLabel: String {
+        switch quickDayOffset {
+        case 0: return "Today"
+        case 1: return "Tomorrow"
+        case -1: return "Yesterday"
+        default:
+            return quickDayOffset > 0 ? "+\(quickDayOffset)d" : "\(quickDayOffset)d"
+        }
     }
 
     var todaysReminders: [ReminderItem] {
@@ -112,11 +130,16 @@ final class ReminderStore: ObservableObject {
         reminders.insert(reminder, at: 0)
         triggerEngine.scheduleNotification(for: reminder)
         quickInput = ""
-        selectedQuickPreset = .none
+        selectedQuickTimePreset = nil
+        quickDayOffset = 0
     }
 
-    func toggleQuickPreset(_ preset: QuickDuePreset) {
-        selectedQuickPreset = selectedQuickPreset == preset ? .none : preset
+    func toggleQuickTimePreset(_ preset: QuickTimePreset) {
+        selectedQuickTimePreset = selectedQuickTimePreset == preset ? nil : preset
+    }
+
+    func adjustQuickDayOffset(by delta: Int) {
+        quickDayOffset = max(-30, min(30, quickDayOffset + delta))
     }
 
     func toggleCompleted(_ id: UUID) {
@@ -148,31 +171,5 @@ final class ReminderStore: ObservableObject {
     private func triggerDate(from trigger: ReminderTrigger) -> Date? {
         if case .time(let date) = trigger { return date }
         return nil
-    }
-
-    private func dueDate(for preset: QuickDuePreset) -> Date? {
-        var comps = Calendar.current.dateComponents([.year, .month, .day], from: .now)
-        switch preset {
-        case .none:
-            return nil
-        case .inOneHour:
-            return Calendar.current.date(byAdding: .hour, value: 1, to: .now)
-        case .tonight:
-            comps.hour = 20
-            comps.minute = 0
-            return Calendar.current.date(from: comps)
-        case .tomorrowMorning:
-            guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: .now) else { return nil }
-            var tomorrowComps = Calendar.current.dateComponents([.year, .month, .day], from: tomorrow)
-            tomorrowComps.hour = 9
-            tomorrowComps.minute = 0
-            return Calendar.current.date(from: tomorrowComps)
-        case .tomorrowThreePM:
-            guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: .now) else { return nil }
-            var tomorrowComps = Calendar.current.dateComponents([.year, .month, .day], from: tomorrow)
-            tomorrowComps.hour = 15
-            tomorrowComps.minute = 0
-            return Calendar.current.date(from: tomorrowComps)
-        }
     }
 }

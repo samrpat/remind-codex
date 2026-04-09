@@ -20,7 +20,7 @@ struct QuickAddView: View {
                     store.createReminderFromQuickInput()
                 }
 
-            quickPresetBar
+            quickTimeControls
 
             HStack {
                 Label("Swipe ← → categories", systemImage: "rectangle.3.group.bubble")
@@ -49,22 +49,45 @@ struct QuickAddView: View {
         }
     }
 
-    private var quickPresetBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach([QuickDuePreset.inOneHour, .tonight, .tomorrowMorning, .tomorrowThreePM], id: \.self) { preset in
-                    Button {
-                        store.toggleQuickPreset(preset)
-                    } label: {
-                        Text(preset.label)
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background(store.selectedQuickPreset == preset ? Color.accentColor.opacity(0.25) : Color.white.opacity(0.09), in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
+    private var quickTimeControls: some View {
+        HStack(spacing: 10) {
+            Button {
+                store.adjustQuickDayOffset(by: -1)
+            } label: {
+                Image(systemName: "minus")
+                    .frame(width: 28, height: 28)
             }
+            .buttonStyle(.bordered)
+
+            Text(store.dayOffsetLabel)
+                .font(.caption.weight(.semibold))
+                .frame(minWidth: 80)
+
+            Button {
+                store.adjustQuickDayOffset(by: 1)
+            } label: {
+                Image(systemName: "plus")
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.bordered)
+
+            Spacer(minLength: 4)
+
+            quickTimeButton(.nineAM)
+            quickTimeButton(.threePM)
         }
+    }
+
+    private func quickTimeButton(_ preset: QuickTimePreset) -> some View {
+        Button {
+            store.toggleQuickTimePreset(preset)
+        } label: {
+            Text(preset.label)
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(store.selectedQuickTimePreset == preset ? Color.accentColor.opacity(0.25) : Color.white.opacity(0.09), in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }

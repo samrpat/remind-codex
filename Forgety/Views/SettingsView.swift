@@ -17,20 +17,37 @@ struct SettingsView: View {
 
                 Divider()
 
-                Picker("Default priority", selection: $store.settings.defaultPriority) {
-                    ForEach(Priority.allCases) { priority in
-                        Text(priority.displayName).tag(priority)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Default priority for new reminders")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Picker("Default priority", selection: $store.settings.defaultPriority) {
+                        ForEach(Priority.allCases) { priority in
+                            Text(priority.displayName).tag(priority)
+                        }
                     }
+                    .labelsHidden()
                 }
 
-                Picker("Default repeat", selection: $store.settings.defaultRepeat) {
-                    ForEach(RepeatFrequency.allCases) { frequency in
-                        Text(frequency.displayName).tag(frequency)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Default repeat rule for new reminders")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Picker("Default repeat", selection: $store.settings.defaultRepeat) {
+                        ForEach(RepeatFrequency.allCases) { frequency in
+                            Text(frequency.displayName).tag(frequency)
+                        }
                     }
+                    .labelsHidden()
                 }
 
-                TextField("Default list name", text: $store.settings.defaultListName)
-                    .textFieldStyle(.roundedBorder)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Default list name")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("Reminders", text: $store.settings.defaultListName)
+                        .textFieldStyle(.roundedBorder)
+                }
 
                 Toggle("iCloud sync", isOn: $store.settings.iCloudSyncEnabled)
                 Toggle("Location triggers", isOn: $store.settings.locationTriggersEnabled)

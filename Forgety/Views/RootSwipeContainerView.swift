@@ -18,21 +18,18 @@ struct RootSwipeContainerView: View {
                 } else {
                     CategoryLaneView()
                 }
-                dashboardBar
+                todayWeekBar
                 Spacer()
             }
             .padding()
         }
         .contentShape(Rectangle())
-        .gesture(dragGesture)
+        .gesture(horizontalSwipeGesture)
         .sheet(isPresented: $store.showTodaySheet) {
             TodayView()
         }
         .sheet(isPresented: $store.showListDetailSheet) {
             ReminderListDetailView()
-        }
-        .sheet(isPresented: $store.showDashboardSheet) {
-            DashboardOverviewView()
         }
         .sheet(item: $store.selectedReminder) { reminder in
             ReminderDetailSheetView(reminder: reminder)
@@ -50,26 +47,23 @@ struct RootSwipeContainerView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    private var dragGesture: some Gesture {
+    private var horizontalSwipeGesture: some Gesture {
         DragGesture(minimumDistance: 22)
             .onEnded { value in
                 let horizontal = value.translation.width
                 let vertical = value.translation.height
-                if abs(horizontal) > abs(vertical) {
-                    if horizontal < -40 { store.cycleCategory(direction: 1) }
-                    if horizontal > 40 { store.cycleCategory(direction: -1) }
-                } else if vertical > 70 {
-                    store.showTodaySheet = true
-                }
+                guard abs(horizontal) > abs(vertical) else { return }
+                if horizontal < -40 { store.cycleCategory(direction: 1) }
+                if horizontal > 40 { store.cycleCategory(direction: -1) }
             }
     }
 
-    private var dashboardBar: some View {
+    private var todayWeekBar: some View {
         GlassCard {
             HStack {
                 Button {
-                    store.dashboardScope = .today
-                    store.showDashboardSheet = true
+                    store.todayScope = .today
+                    store.showTodaySheet = true
                 } label: {
                     metric(title: "Today", value: store.completionToday)
                 }
@@ -78,8 +72,8 @@ struct RootSwipeContainerView: View {
                 Spacer()
 
                 Button {
-                    store.dashboardScope = .week
-                    store.showDashboardSheet = true
+                    store.todayScope = .week
+                    store.showTodaySheet = true
                 } label: {
                     metric(title: "Week", value: store.completionWeek)
                 }

@@ -46,8 +46,7 @@ final class ReminderStore: ObservableObject {
 
     @Published var searchQuery: String = ""
     @Published var showListDetailSheet = false
-    @Published var showDashboardSheet = false
-    @Published var dashboardScope: DashboardScope = .today
+    @Published var todayScope: DashboardScope = .today
 
     let parser = NaturalLanguageParser()
     let triggerEngine = ContextTriggerEngine()

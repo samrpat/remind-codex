@@ -11,8 +11,8 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
 - Top search bar on the homepage for quick filtering (instead of a separate search screen).
 - List card on homepage opens into a dedicated **list detail view** styled with the same liquid-glass theme as home/settings, with:
   - sectioned list layout,
-  - section creation,
-  - sort by due date/manual,
+  - mini settings panel for sort mode + adding sections,
+  - themed manual/due-date sort chips,
   - inline due dates and options actions.
 - Unified **Today & Week** view:
   - segmented Today/Week control,

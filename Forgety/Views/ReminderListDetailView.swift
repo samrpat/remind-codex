@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ReminderListDetailView: View {
     @EnvironmentObject var store: ReminderStore
+    @State private var showMiniSettings = false
 
     var body: some View {
         NavigationStack {
@@ -11,10 +12,13 @@ struct ReminderListDetailView: View {
 
                 ScrollView {
                     VStack(spacing: 12) {
-                        searchBar
-                        if let category = store.activeCategory {
-                            listControls
+                        headerBar
 
+                        if showMiniSettings {
+                            miniSettingsPanel
+                        }
+
+                        if let category = store.activeCategory {
                             if store.searchQuery.isEmpty {
                                 ForEach(store.sections(for: category), id: \.self) { section in
                                     GlassCard {
@@ -46,36 +50,66 @@ struct ReminderListDetailView: View {
         }
     }
 
-    private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-            TextField("Search reminders", text: $store.searchQuery)
-                .textInputAutocapitalization(.never)
+    private var headerBar: some View {
+        HStack(spacing: 10) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                TextField("Search reminders", text: $store.searchQuery)
+                    .textInputAutocapitalization(.never)
+            }
+            .padding(12)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            Button {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                    showMiniSettings.toggle()
+                }
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.headline)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
-        .padding(12)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    private var listControls: some View {
+    private var miniSettingsPanel: some View {
         GlassCard {
-            HStack {
-                Picker("Sort", selection: $store.listSortMode) {
-                    ForEach(ListSortMode.allCases) { mode in
-                        Text(mode.label).tag(mode)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("List settings")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 8) {
+                    sortChip(.manual)
+                    sortChip(.dueDate)
+                }
+
+                HStack {
+                    TextField("New section", text: $store.newSectionName)
+                        .textFieldStyle(.roundedBorder)
+                    Button("Add") {
+                        store.addSectionToActiveCategory()
                     }
+                    .buttonStyle(.borderedProminent)
                 }
-                .pickerStyle(.segmented)
-
-                TextField("New section", text: $store.newSectionName)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 140)
-
-                Button("Add") {
-                    store.addSectionToActiveCategory()
-                }
-                .buttonStyle(.borderedProminent)
             }
         }
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+
+    private func sortChip(_ mode: ListSortMode) -> some View {
+        Button {
+            store.listSortMode = mode
+        } label: {
+            Text(mode.label)
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(store.listSortMode == mode ? Color.accentColor.opacity(0.26) : Color.white.opacity(0.08), in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder

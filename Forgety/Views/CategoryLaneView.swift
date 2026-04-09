@@ -2,12 +2,13 @@ import SwiftUI
 
 struct CategoryLaneView: View {
     @EnvironmentObject var store: ReminderStore
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         if let category = store.activeCategory {
             let sectionCount = store.sections(for: category).count
             let reminderCount = store.reminders(for: category).count
-            let dueSoon = store.reminders(for: category).filter { ($0.dueDate ?? .distantFuture) < Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .distantFuture }.count
+            let preview = Array(store.reminders(for: category).prefix(3))
 
             GlassCard {
                 VStack(alignment: .leading, spacing: 12) {
@@ -17,7 +18,32 @@ struct CategoryLaneView: View {
                     HStack(spacing: 18) {
                         metric("Reminders", value: "\(reminderCount)")
                         metric("Sections", value: "\(sectionCount)")
-                        metric("Due Soon", value: "\(dueSoon)")
+                    }
+
+                    if !preview.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Up next")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            ForEach(preview) { item in
+                                HStack {
+                                    Button {
+                                        if let url = item.url { openURL(url) }
+                                    } label: {
+                                        Text(item.title)
+                                            .lineLimit(1)
+                                            .foregroundStyle(item.url == nil ? .primary : .blue)
+                                    }
+                                    .buttonStyle(.plain)
+                                    Spacer()
+                                    Text(item.dueDate?.formatted(date: .abbreviated, time: .shortened) ?? "No due")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(8)
+                                .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            }
+                        }
                     }
 
                     Button {

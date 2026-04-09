@@ -1,6 +1,6 @@
 # Forgety (iOS SwiftUI Concept)
 
-A swipe-first reminder app focused on ultra-fast input, natural language parsing, and context-aware triggers.
+A swipe-first reminder app focused on ultra-fast input, natural language parsing, and focus-mode-aware reminders.
 
 ## Included in this scaffold
 
@@ -8,8 +8,10 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
 - Gesture navigation:
   - Swipe left/right: cycle Home, Arcade, Settings, and custom categories.
   - Today/Week opens by tap (no vertical swipe dependency).
-- Top search bar on the homepage for quick filtering (instead of a separate search screen).
-- List card on homepage opens into a dedicated **list detail view** styled with the same liquid-glass theme as home/settings, with:
+- Top search bar on the homepage for quick filtering.
+- Homepage list card now includes the first few upcoming reminders with inline due date.
+- Tapping a reminder title opens its URL if present.
+- List card opens into a dedicated **list detail view** with:
   - sectioned list layout,
   - mini settings panel for sort mode + adding sections,
   - themed manual/due-date sort chips,
@@ -20,21 +22,15 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
   - today tasks,
   - rest-of-week preview inside Today mode,
   - full week task/completion view in Week mode.
-- Simplified Settings page with themed glass cards/toggles and clearly-labeled defaults + trigger configuration.
-- Natural language parsing for:
-  - Time (`tomorrow at 8pm`, `in 2 hours`, `due 3pm tmrw`)
-  - Location hints (`home`, `school`)
-  - WiFi trigger phrases
-  - App mode trigger phrases
-- Expanded reminder options inspired by iOS Reminders.
+- Simplified Settings focused on defaults + **Focus Mode trigger**.
+- Natural language parsing now supports:
+  - due date/time phrases,
+  - priority hints,
+  - repeat hints,
+  - section hints,
+  - hashtags (`#tag`) mapped to reminder tags.
+- Reminder options use list/section pickers, removed assigned-to/flagged/start-time fields.
 
 ## Project structure
 
-`Forgety/` contains an app-style SwiftUI source layout suitable for dropping into an Xcode iOS target:
-
-- `App/` application entry point + root app view
-- `Models/` reminder, trigger, repeat, alert, and settings data models
-- `Services/` NLP parser + trigger engine
-- `ViewModels/` observable app state and orchestration
-- `Views/` swipe container + quick add + today/week + list detail + settings + reminder options sheet
-- `Components/` reusable glass card UI
+`Forgety/` contains an app-style SwiftUI source layout suitable for dropping into an Xcode iOS target.

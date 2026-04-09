@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ReminderListDetailView: View {
     @EnvironmentObject var store: ReminderStore
+    @Environment(\.openURL) private var openURL
     @State private var showMiniSettings = false
+    @State private var localSelectedReminder: ReminderItem?
 
     var body: some View {
         NavigationStack {
@@ -13,10 +15,7 @@ struct ReminderListDetailView: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         headerBar
-
-                        if showMiniSettings {
-                            miniSettingsPanel
-                        }
+                        if showMiniSettings { miniSettingsPanel }
 
                         if let category = store.activeCategory {
                             if store.searchQuery.isEmpty {
@@ -48,6 +47,10 @@ struct ReminderListDetailView: View {
             .navigationTitle(store.activeCategory?.name ?? "List")
             .presentationDetents([.large])
         }
+        .sheet(item: $localSelectedReminder) { reminder in
+            ReminderDetailSheetView(reminder: reminder)
+                .environmentObject(store)
+        }
     }
 
     private var headerBar: some View {
@@ -61,9 +64,7 @@ struct ReminderListDetailView: View {
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
             Button {
-                withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                    showMiniSettings.toggle()
-                }
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) { showMiniSettings.toggle() }
             } label: {
                 Image(systemName: "slider.horizontal.3")
                     .font(.headline)
@@ -89,6 +90,7 @@ struct ReminderListDetailView: View {
                 HStack {
                     TextField("New section", text: $store.newSectionName)
                         .textFieldStyle(.roundedBorder)
+                        .onSubmit { store.addSectionToActiveCategory() }
                     Button("Add") {
                         store.addSectionToActiveCategory()
                     }
@@ -130,8 +132,15 @@ struct ReminderListDetailView: View {
                     .buttonStyle(.plain)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(reminder.title)
-                            .font(.body.weight(.semibold))
+                        Button {
+                            if let url = reminder.url { openURL(url) }
+                        } label: {
+                            Text(reminder.title)
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(reminder.url == nil ? .primary : .blue)
+                        }
+                        .buttonStyle(.plain)
+
                         Text(dueLabel(reminder))
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -140,12 +149,22 @@ struct ReminderListDetailView: View {
                     Spacer()
 
                     Button("Options") {
-                        store.selectedReminder = reminder
+                        localSelectedReminder = reminder
                     }
                     .font(.caption)
                 }
+                .padding(10)
+                .background(taskAccent(reminder.priority), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Divider().overlay(Color.white.opacity(0.15))
             }
+        }
+    }
+
+    private func taskAccent(_ priority: Priority) -> Color {
+        switch priority {
+        case .high: return .red.opacity(0.18)
+        case .medium: return .blue.opacity(0.16)
+        case .low: return .green.opacity(0.14)
         }
     }
 

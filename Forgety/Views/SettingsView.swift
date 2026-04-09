@@ -30,27 +30,10 @@ struct SettingsView: View {
                 }
 
                 GlassCard {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Triggers")
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Focus Mode Trigger")
                             .font(.headline)
-
-                        themedToggle("Location triggers", isOn: $store.settings.locationTriggersEnabled)
-                        if store.settings.locationTriggersEnabled {
-                            Text("Radius: \(Int(store.settings.locationTriggerRadiusMeters))m")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Slider(value: $store.settings.locationTriggerRadiusMeters, in: 50...1000, step: 25)
-                        }
-
-                        themedToggle("WiFi triggers", isOn: $store.settings.wifiTriggersEnabled)
-                        if store.settings.wifiTriggersEnabled {
-                            TextField("Home WiFi SSID", text: $store.settings.homeSSID)
-                                .textFieldStyle(.roundedBorder)
-                            TextField("Work/School WiFi SSID", text: $store.settings.workSSID)
-                                .textFieldStyle(.roundedBorder)
-                        }
-
-                        themedToggle("Focus mode triggers", isOn: $store.settings.appModeTriggersEnabled)
+                        themedToggle("Enable focus mode trigger", isOn: $store.settings.appModeTriggersEnabled)
                         if store.settings.appModeTriggersEnabled {
                             TextField("Focus mode name", text: $store.settings.preferredFocusMode)
                                 .textFieldStyle(.roundedBorder)

@@ -1,5 +1,4 @@
 import Foundation
-import CoreLocation
 
 enum ReminderStatus: String, Codable, CaseIterable {
     case active
@@ -32,7 +31,6 @@ enum RepeatFrequency: String, Codable, CaseIterable, Identifiable {
     case yearly
 
     var id: String { rawValue }
-
     var displayName: String { rawValue.capitalized }
 }
 
@@ -55,23 +53,8 @@ struct ReminderAlert: Codable, Hashable, Identifiable {
 
 enum ReminderTrigger: Codable, Hashable {
     case time(Date)
-    case location(LocationTrigger)
-    case wifi(String)
     case appMode(String)
-    case arrival(LocationTrigger)
-    case departure(LocationTrigger)
     case none
-}
-
-struct LocationTrigger: Codable, Hashable {
-    let label: String
-    let latitude: Double?
-    let longitude: Double?
-
-    var coordinate: CLLocationCoordinate2D? {
-        guard let latitude, let longitude else { return nil }
-        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-    }
 }
 
 struct Subtask: Identifiable, Codable, Hashable {
@@ -98,17 +81,14 @@ struct ReminderItem: Identifiable, Codable, Hashable {
     var sectionName: String
     var createdAt: Date
     var dueDate: Date?
-    var startDate: Date?
     var trigger: ReminderTrigger
     var status: ReminderStatus
     var priority: Priority
-    var flagged: Bool
     var allDay: Bool
     var tags: [String]
     var subtasks: [Subtask]
     var repeatRule: ReminderRepeatRule
     var alerts: [ReminderAlert]
-    var assignedTo: String?
     var lastNotifiedAt: Date?
 
     init(
@@ -121,17 +101,14 @@ struct ReminderItem: Identifiable, Codable, Hashable {
         sectionName: String = "General",
         createdAt: Date = .now,
         dueDate: Date? = nil,
-        startDate: Date? = nil,
         trigger: ReminderTrigger = .none,
         status: ReminderStatus = .active,
         priority: Priority = .medium,
-        flagged: Bool = false,
         allDay: Bool = false,
         tags: [String] = [],
         subtasks: [Subtask] = [],
         repeatRule: ReminderRepeatRule = .none,
         alerts: [ReminderAlert] = [ReminderAlert(offsetMinutes: 0)],
-        assignedTo: String? = nil,
         lastNotifiedAt: Date? = nil
     ) {
         self.id = id
@@ -143,17 +120,14 @@ struct ReminderItem: Identifiable, Codable, Hashable {
         self.sectionName = sectionName
         self.createdAt = createdAt
         self.dueDate = dueDate
-        self.startDate = startDate
         self.trigger = trigger
         self.status = status
         self.priority = priority
-        self.flagged = flagged
         self.allDay = allDay
         self.tags = tags
         self.subtasks = subtasks
         self.repeatRule = repeatRule
         self.alerts = alerts
-        self.assignedTo = assignedTo
         self.lastNotifiedAt = lastNotifiedAt
     }
 }
@@ -174,26 +148,13 @@ struct ReminderCategory: Identifiable, Codable, Hashable {
     }
 }
 
-struct CompletionAnalytics: Codable {
-    var dayCompletionCount: Int
-    var weekCompletionCount: Int
-    var streakDays: Int
-}
-
 struct AppSettings: Codable, Hashable {
     var smartParsingEnabled: Bool = true
     var hapticsEnabled: Bool = true
     var smartRepeatEnabled: Bool = true
-    var showBadgeCount: Bool = true
     var defaultPriority: Priority = .medium
     var defaultListName: String = "Reminders"
     var defaultRepeat: RepeatFrequency = .never
-    var iCloudSyncEnabled: Bool = false
-    var locationTriggersEnabled: Bool = true
-    var wifiTriggersEnabled: Bool = true
     var appModeTriggersEnabled: Bool = true
-    var homeSSID: String = ""
-    var workSSID: String = ""
     var preferredFocusMode: String = ""
-    var locationTriggerRadiusMeters: Double = 150
 }

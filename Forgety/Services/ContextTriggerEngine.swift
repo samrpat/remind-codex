@@ -18,7 +18,7 @@ final class ContextTriggerEngine: NSObject, CLLocationManagerDelegate {
 
     func scheduleNotification(for reminder: ReminderItem) {
         let content = UNMutableNotificationContent()
-        content.title = reminder.flagged ? "Flagged Reminder" : "Reminder"
+        content.title = "Reminder"
         content.body = reminder.title
         content.sound = .default
 

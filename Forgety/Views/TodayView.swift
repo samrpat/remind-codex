@@ -10,7 +10,7 @@ struct TodayView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(reminder.title)
                             .font(.headline)
-                        Text(triggerLabel(reminder.trigger))
+                        Text(detailLine(reminder))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -19,6 +19,12 @@ struct TodayView: View {
             .navigationTitle("Today")
             .presentationDetents([.medium, .large])
         }
+    }
+
+    private func detailLine(_ reminder: ReminderItem) -> String {
+        let triggerText = triggerLabel(reminder.trigger)
+        let due = reminder.dueDate?.formatted(date: .abbreviated, time: .shortened) ?? "No due date"
+        return "\(triggerText) • Due: \(due)"
     }
 
     private func triggerLabel(_ trigger: ReminderTrigger) -> String {

@@ -15,17 +15,32 @@ struct CategoryLaneView: View {
                         Text("No active reminders")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(reminders.prefix(5)) { reminder in
+                        ForEach(reminders.prefix(8)) { reminder in
                             HStack {
                                 Button {
                                     store.toggleCompleted(reminder.id)
                                 } label: {
-                                    Image(systemName: "circle")
+                                    Image(systemName: reminder.status == .completed ? "checkmark.circle.fill" : "circle")
                                 }
                                 .buttonStyle(.plain)
-                                Text(reminder.title)
-                                    .lineLimit(1)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(reminder.title)
+                                        .lineLimit(1)
+                                    HStack(spacing: 6) {
+                                        if reminder.flagged {
+                                            Image(systemName: "flag.fill").foregroundStyle(.orange)
+                                        }
+                                        Text(reminder.priority.displayName)
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
                                 Spacer()
+                                Button("Options") {
+                                    store.selectedReminder = reminder
+                                }
+                                .font(.caption)
                             }
                         }
                     }

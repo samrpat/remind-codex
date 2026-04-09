@@ -10,6 +10,8 @@ final class ReminderStore: ObservableObject {
     @Published var activeCategoryIndex = 0
     @Published var showTodaySheet = false
     @Published var showArchiveSheet = false
+    @Published var settings = AppSettings()
+    @Published var selectedReminder: ReminderItem?
 
     let parser = NaturalLanguageParser()
     let triggerEngine = ContextTriggerEngine()
@@ -21,8 +23,15 @@ final class ReminderStore: ObservableObject {
         return categories[activeCategoryIndex]
     }
 
+    var isSettingsPageActive: Bool {
+        activeCategory?.name == "Settings"
+    }
+
     var todaysReminders: [ReminderItem] {
         reminders.filter { reminder in
+            if let dueDate = reminder.dueDate {
+                return Calendar.current.isDateInToday(dueDate)
+            }
             if case .time(let date) = reminder.trigger {
                 return Calendar.current.isDateInToday(date)
             }
@@ -55,11 +64,22 @@ final class ReminderStore: ObservableObject {
         let text = quickInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
 
-        let parsed = parser.parse(text)
-        let category = categoryForHint(parsed.categoryHint) ?? activeCategory ?? categories.first
+        let parsed = settings.smartParsingEnabled ? parser.parse(text) : ParsedReminderInput(cleanedTitle: text, categoryHint: nil, trigger: .none)
+        let fallbackCategory = categories.first { $0.name != "Settings" }
+        let category = categoryForHint(parsed.categoryHint) ?? activeCategory ?? fallbackCategory
 
         guard let category else { return }
-        let reminder = ReminderItem(title: parsed.cleanedTitle, categoryID: category.id, trigger: parsed.trigger)
+        var reminder = ReminderItem(
+            title: parsed.cleanedTitle,
+            categoryID: category.id,
+            listName: settings.defaultListName,
+            dueDate: triggerDate(from: parsed.trigger),
+            trigger: parsed.trigger,
+            priority: settings.defaultPriority,
+            repeatRule: ReminderRepeatRule(frequency: settings.defaultRepeat, interval: 1)
+        )
+        reminder.flagged = reminder.priority == .high
+
         reminders.insert(reminder, at: 0)
         triggerEngine.scheduleNotification(for: reminder)
         quickInput = ""
@@ -68,9 +88,14 @@ final class ReminderStore: ObservableObject {
     func toggleCompleted(_ id: UUID) {
         guard let idx = reminders.firstIndex(where: { $0.id == id }) else { return }
         reminders[idx].status = reminders[idx].status == .completed ? .active : .completed
-        if reminders[idx].status == .active {
+        if reminders[idx].status == .active && settings.smartRepeatEnabled {
             triggerEngine.enqueueRepeatIfIncomplete(for: reminders[idx])
         }
+    }
+
+    func updateReminder(_ reminder: ReminderItem) {
+        guard let idx = reminders.firstIndex(where: { $0.id == reminder.id }) else { return }
+        reminders[idx] = reminder
     }
 
     func addCategory(name: String, icon: String = "folder.fill", tintHex: String = "#22C55E") {
@@ -84,5 +109,10 @@ final class ReminderStore: ObservableObject {
     private func categoryForHint(_ hint: String?) -> ReminderCategory? {
         guard let hint else { return nil }
         return categories.first { $0.name.lowercased() == hint.lowercased() }
+    }
+
+    private func triggerDate(from trigger: ReminderTrigger) -> Date? {
+        if case .time(let date) = trigger { return date }
+        return nil
     }
 }

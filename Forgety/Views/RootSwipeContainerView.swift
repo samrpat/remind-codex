@@ -10,8 +10,14 @@ struct RootSwipeContainerView: View {
 
             VStack(spacing: 16) {
                 Spacer(minLength: 24)
-                QuickAddView()
-                CategoryLaneView()
+                if !store.isSettingsPageActive {
+                    QuickAddView()
+                }
+                if store.isSettingsPageActive {
+                    SettingsView()
+                } else {
+                    CategoryLaneView()
+                }
                 statsBar
                 Spacer()
             }
@@ -24,6 +30,9 @@ struct RootSwipeContainerView: View {
         }
         .sheet(isPresented: $store.showArchiveSheet) {
             ArchiveSearchView()
+        }
+        .sheet(item: $store.selectedReminder) { reminder in
+            ReminderDetailSheetView(reminder: reminder)
         }
         .animation(.spring(response: 0.32, dampingFraction: 0.85), value: store.activeCategoryIndex)
     }

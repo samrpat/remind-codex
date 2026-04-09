@@ -1,4 +1,4 @@
-# Remind Me Faster (iOS SwiftUI Concept)
+# Forgety (iOS SwiftUI Concept)
 
 A swipe-first reminder app focused on ultra-fast input, natural language parsing, and context-aware triggers.
 
@@ -21,7 +21,7 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
 
 ## Project structure
 
-`RemindMeFaster/` contains an app-style SwiftUI source layout suitable for dropping into an Xcode iOS target:
+`Forgety/` contains an app-style SwiftUI source layout suitable for dropping into an Xcode iOS target:
 
 - `App/` application entry point
 - `Models/` reminder and trigger data models

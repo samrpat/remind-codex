@@ -1,9 +1,15 @@
 import SwiftUI
 
-/// Root app shell for embedding in an existing app target.
-///
-/// Note: This type intentionally does not use `@main` so it can be dropped into
-/// projects that already have an app entry point (for example, `ForgetyApp`).
+@main
+struct ForgetyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ForgetyAppView()
+        }
+    }
+}
+
+/// Root app shell with the swipe-first reminder experience.
 struct ForgetyAppView: View {
     @StateObject private var store = ReminderStore()
 

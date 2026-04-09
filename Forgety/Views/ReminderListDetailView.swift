@@ -5,82 +5,112 @@ struct ReminderListDetailView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 12) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                    TextField("Search reminders", text: $store.searchQuery)
-                        .textInputAutocapitalization(.never)
-                }
-                .padding(10)
-                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            ZStack {
+                LinearGradient(colors: [Color.cyan.opacity(0.22), Color.indigo.opacity(0.28), Color.black.opacity(0.65)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .ignoresSafeArea()
 
-                if let category = store.activeCategory {
-                    listControls(category)
+                ScrollView {
+                    VStack(spacing: 12) {
+                        searchBar
+                        if let category = store.activeCategory {
+                            listControls
 
-                    List {
-                        if store.searchQuery.isEmpty {
-                            ForEach(store.sections(for: category), id: \.self) { section in
-                                Section(section) {
-                                    rows(store.reminders(for: category, section: section))
+                            if store.searchQuery.isEmpty {
+                                ForEach(store.sections(for: category), id: \.self) { section in
+                                    GlassCard {
+                                        VStack(alignment: .leading, spacing: 10) {
+                                            Text(section)
+                                                .font(.headline)
+                                                .foregroundStyle(.secondary)
+                                            rows(store.reminders(for: category, section: section))
+                                        }
+                                    }
                                 }
-                            }
-                        } else {
-                            Section("Results") {
-                                rows(store.filteredRemindersForActiveCategory())
+                            } else {
+                                GlassCard {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text("Results")
+                                            .font(.headline)
+                                            .foregroundStyle(.secondary)
+                                        rows(store.filteredRemindersForActiveCategory())
+                                    }
+                                }
                             }
                         }
                     }
-                    .listStyle(.insetGrouped)
+                    .padding()
                 }
             }
-            .padding(.horizontal)
             .navigationTitle(store.activeCategory?.name ?? "List")
             .presentationDetents([.large])
         }
     }
 
-    private func listControls(_ category: ReminderCategory) -> some View {
+    private var searchBar: some View {
         HStack {
-            Picker("Sort", selection: $store.listSortMode) {
-                ForEach(ListSortMode.allCases) { mode in
-                    Text(mode.label).tag(mode)
+            Image(systemName: "magnifyingglass")
+            TextField("Search reminders", text: $store.searchQuery)
+                .textInputAutocapitalization(.never)
+        }
+        .padding(12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var listControls: some View {
+        GlassCard {
+            HStack {
+                Picker("Sort", selection: $store.listSortMode) {
+                    ForEach(ListSortMode.allCases) { mode in
+                        Text(mode.label).tag(mode)
+                    }
                 }
-            }
-            .pickerStyle(.segmented)
+                .pickerStyle(.segmented)
 
-            TextField("New section", text: $store.newSectionName)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 140)
+                TextField("New section", text: $store.newSectionName)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 140)
 
-            Button("Add") {
-                store.addSectionToActiveCategory()
+                Button("Add") {
+                    store.addSectionToActiveCategory()
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.bordered)
         }
     }
 
     @ViewBuilder
     private func rows(_ reminders: [ReminderItem]) -> some View {
-        ForEach(reminders) { reminder in
-            HStack(alignment: .top) {
-                Button {
-                    store.toggleCompleted(reminder.id)
-                } label: {
-                    Image(systemName: reminder.status == .completed ? "checkmark.circle.fill" : "circle")
-                }
-                .buttonStyle(.plain)
+        if reminders.isEmpty {
+            Text("No reminders")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        } else {
+            ForEach(reminders) { reminder in
+                HStack(alignment: .top) {
+                    Button {
+                        store.toggleCompleted(reminder.id)
+                    } label: {
+                        Image(systemName: reminder.status == .completed ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.plain)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(reminder.title)
-                    Text(dueLabel(reminder))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(reminder.title)
+                            .font(.body.weight(.semibold))
+                        Text(dueLabel(reminder))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Button("Options") {
+                        store.selectedReminder = reminder
+                    }
+                    .font(.caption)
                 }
-                Spacer()
-                Button("Options") {
-                    store.selectedReminder = reminder
-                }
-                .font(.caption)
+                Divider().overlay(Color.white.opacity(0.15))
             }
         }
     }

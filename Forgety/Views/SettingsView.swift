@@ -4,60 +4,73 @@ struct SettingsView: View {
     @EnvironmentObject var store: ReminderStore
 
     var body: some View {
-        GlassCard {
-            VStack(alignment: .leading, spacing: 14) {
-                Label("Settings", systemImage: "gearshape.fill")
-                    .font(.headline)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Settings")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.white)
 
-                Toggle("Smart parsing", isOn: $store.settings.smartParsingEnabled)
-                Toggle("Smart repeat alerts", isOn: $store.settings.smartRepeatEnabled)
-                Toggle("Haptics", isOn: $store.settings.hapticsEnabled)
+                GlassCard {
+                    VStack(spacing: 10) {
+                        themedToggle("Smart parsing", isOn: $store.settings.smartParsingEnabled)
+                        themedToggle("Smart repeat alerts", isOn: $store.settings.smartRepeatEnabled)
+                        themedToggle("Haptics", isOn: $store.settings.hapticsEnabled)
+                    }
+                }
 
-                Divider()
-
-                Group {
-                    labeledPicker("Default priority", selection: $store.settings.defaultPriority, values: Priority.allCases) { $0.displayName }
-                    labeledPicker("Default repeat", selection: $store.settings.defaultRepeat, values: RepeatFrequency.allCases) { $0.displayName }
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Default list name")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        TextField("Reminders", text: $store.settings.defaultListName)
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Defaults")
+                            .font(.headline)
+                        labeledPicker("Default priority", selection: $store.settings.defaultPriority, values: Priority.allCases) { $0.displayName }
+                        labeledPicker("Default repeat", selection: $store.settings.defaultRepeat, values: RepeatFrequency.allCases) { $0.displayName }
+                        TextField("Default list name", text: $store.settings.defaultListName)
                             .textFieldStyle(.roundedBorder)
                     }
                 }
 
-                Divider()
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Triggers")
+                            .font(.headline)
 
-                Toggle("Enable location triggers", isOn: $store.settings.locationTriggersEnabled)
-                if store.settings.locationTriggersEnabled {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Location trigger radius (meters)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Slider(value: $store.settings.locationTriggerRadiusMeters, in: 50...1000, step: 25)
-                        Text("\(Int(store.settings.locationTriggerRadiusMeters)) m")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                        themedToggle("Location triggers", isOn: $store.settings.locationTriggersEnabled)
+                        if store.settings.locationTriggersEnabled {
+                            Text("Radius: \(Int(store.settings.locationTriggerRadiusMeters))m")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Slider(value: $store.settings.locationTriggerRadiusMeters, in: 50...1000, step: 25)
+                        }
+
+                        themedToggle("WiFi triggers", isOn: $store.settings.wifiTriggersEnabled)
+                        if store.settings.wifiTriggersEnabled {
+                            TextField("Home WiFi SSID", text: $store.settings.homeSSID)
+                                .textFieldStyle(.roundedBorder)
+                            TextField("Work/School WiFi SSID", text: $store.settings.workSSID)
+                                .textFieldStyle(.roundedBorder)
+                        }
+
+                        themedToggle("Focus mode triggers", isOn: $store.settings.appModeTriggersEnabled)
+                        if store.settings.appModeTriggersEnabled {
+                            TextField("Focus mode name", text: $store.settings.preferredFocusMode)
+                                .textFieldStyle(.roundedBorder)
+                        }
                     }
                 }
-
-                Toggle("Enable WiFi triggers", isOn: $store.settings.wifiTriggersEnabled)
-                if store.settings.wifiTriggersEnabled {
-                    TextField("Home WiFi SSID", text: $store.settings.homeSSID)
-                        .textFieldStyle(.roundedBorder)
-                    TextField("Work/School WiFi SSID", text: $store.settings.workSSID)
-                        .textFieldStyle(.roundedBorder)
-                }
-
-                Toggle("Enable focus mode triggers", isOn: $store.settings.appModeTriggersEnabled)
-                if store.settings.appModeTriggersEnabled {
-                    TextField("Focus mode name (e.g. Work)", text: $store.settings.preferredFocusMode)
-                        .textFieldStyle(.roundedBorder)
-                }
             }
+            .padding(.vertical, 4)
         }
+    }
+
+    private func themedToggle(_ title: String, isOn: Binding<Bool>) -> some View {
+        HStack {
+            Text(title)
+                .font(.subheadline.weight(.medium))
+            Spacer()
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+        }
+        .padding(.vertical, 2)
     }
 
     private func labeledPicker<T: Hashable & Identifiable>(
@@ -75,7 +88,7 @@ struct SettingsView: View {
                     Text(label(value)).tag(value)
                 }
             }
-            .labelsHidden()
+            .pickerStyle(.segmented)
         }
     }
 }

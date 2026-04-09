@@ -5,19 +5,60 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(store.todaysReminders) { reminder in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(reminder.title)
-                            .font(.headline)
-                        Text(detailLine(reminder))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+            ZStack {
+                LinearGradient(colors: [Color.teal.opacity(0.2), Color.blue.opacity(0.24), Color.black.opacity(0.62)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 12) {
+                        GlassCard {
+                            HStack {
+                                metric("Overdue", value: store.overdueReminders.count)
+                                Spacer()
+                                metric("Due Today", value: store.todaysReminders.count)
+                                Spacer()
+                                metric("Done", value: store.completionToday)
+                            }
+                        }
+
+                        GlassCard {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Today's Tasks")
+                                    .font(.headline)
+
+                                if store.todaysReminders.isEmpty {
+                                    Text("No tasks due today")
+                                        .foregroundStyle(.secondary)
+                                } else {
+                                    ForEach(store.todaysReminders) { reminder in
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(reminder.title)
+                                                .font(.body.weight(.semibold))
+                                            Text(detailLine(reminder))
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        Divider().overlay(Color.white.opacity(0.15))
+                                    }
+                                }
+                            }
+                        }
                     }
+                    .padding()
                 }
             }
             .navigationTitle("Today")
             .presentationDetents([.medium, .large])
+        }
+    }
+
+    private func metric(_ title: String, value: Int) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text("\(value)")
+                .font(.title3.weight(.bold))
         }
     }
 

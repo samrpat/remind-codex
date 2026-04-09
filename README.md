@@ -9,17 +9,17 @@ A swipe-first reminder app focused on ultra-fast input, natural language parsing
   - Swipe left/right: cycle Home, Arcade, Settings, and custom categories.
   - Swipe down: Today view.
 - Top search bar on the homepage for quick filtering (instead of a separate search screen).
-- List card on homepage opens into a dedicated **list detail view** (iOS Reminders style) with:
+- List card on homepage opens into a dedicated **list detail view** styled with the same liquid-glass theme as home/settings, with:
   - sectioned list layout,
   - section creation,
   - sort by due date/manual,
   - inline due dates and options actions.
-- Tapable Today/Week dashboard cards that open overview with:
+- Tapable Today/Week dashboard cards that open overview with a modern liquid-glass layout:
   - overdue vs due today counts,
   - completion stats,
   - today task list,
   - collapsible next-days timeline (next 5 days).
-- Simplified Settings page with clearly-labeled defaults and trigger configuration:
+- Simplified Settings page with themed glass cards/toggles and clearly-labeled defaults + trigger configuration:
   - Smart parsing, smart repeat, haptics.
   - Default priority/repeat/list values.
   - Location trigger radius, WiFi SSIDs, and focus-mode trigger name.
